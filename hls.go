@@ -34,6 +34,8 @@ type Segment struct {
 	Duration float64
 	Url      string
 	Title    string
+	Length   int
+	Offset   int
 	Key      *Key // optional
 }
 
@@ -68,6 +70,7 @@ func ParsePlaylist(url string) (*Playlist, error) {
 	var duration float64
 	var title string
 	var isSegment, isVariant bool
+	var offset, length int
 
 	linenum := 1
 	for s.Scan() {
@@ -83,6 +86,8 @@ func ParsePlaylist(url string) (*Playlist, error) {
 			if ms, err := strconv.Atoi(val); err == nil {
 				pl.MediaSequence = ms
 			}
+		} else if startsWith(line, "#EXT-X-BYTERANGE:", &val) {
+			length, offset = parseByteRange(val)
 		} else if startsWith(line, "#EXT-X-STREAM-INF:", &val) {
 			variant = parseVariant(val)
 			isVariant = true
@@ -104,6 +109,8 @@ func ParsePlaylist(url string) (*Playlist, error) {
 				Duration: duration,
 				Title:    title,
 				Url:      line,
+				Length:   length,
+				Offset:   offset,
 			}
 			if key != nil {
 				segment.Key = key
@@ -180,21 +187,21 @@ func parseExtInf(value string) (d float64, title string, err error) {
 	return
 }
 
-func parseByteRange(value string) (int, int, error) {
-	var length, offset int
-	var err error
-	idx := strings.Index(value, "@")
-	if idx == -1 {
-		idx = len(value)
-	} else {
-		if offset, err = strconv.Atoi(value[idx+1:]); err != nil {
-			return 0, 0, err
+func parseByteRange(value string) (length int, offset int) {
+	if value == "" {
+		return
+	}
+	res := strings.Split(value, "@")
+	fmt.Printf("%q\n", res)
+	if n, err := strconv.Atoi(res[0]); err == nil {
+		length = n
+	}
+	if len(res) > 1 {
+		if o, err := strconv.Atoi(res[1]); err == nil {
+			offset = o
 		}
 	}
-	if length, err = strconv.Atoi(value[:idx]); err != nil {
-		return 0, 0, err
-	}
-	return length, offset, nil
+	return
 }
 
 func parseAttributeList(value string) map[string]string {
@@ -251,7 +258,7 @@ func main() {
 		log.Fatal(err)
 	}
 	for _, s := range pl.Segments {
-		fmt.Printf("%s %f\n", s.Url, s.Duration)
+		fmt.Printf("%s %f %d %d\n", s.Url, s.Duration, s.Length, s.Offset)
 		if s.Key != nil {
 			fmt.Printf("%s\n", s.Key.Url)
 		}
