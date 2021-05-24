@@ -9,10 +9,10 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
-	"unicode/utf8"
 )
 
 type Playlist struct {
@@ -23,10 +23,17 @@ type Playlist struct {
 	Variants       []Variant
 }
 
+type Key struct {
+	Method string
+	Url    string
+	IV     string
+}
+
 type Segment struct {
 	Duration float64
 	Url      string
 	Title    string
+	Key      *Key // optional
 }
 
 type Variant struct {
@@ -36,6 +43,8 @@ type Variant struct {
 	Codecs           string
 	Resolution       string
 }
+
+var re = regexp.MustCompile(`([-A-Z0-9]+)=("[^"\x0A\x0D]+"|[^",\s]+)`)
 
 func ParsePlaylist(url string) (*Playlist, error) {
 	content, err := fetch(url)
@@ -52,6 +61,7 @@ func ParsePlaylist(url string) (*Playlist, error) {
 
 	var pl Playlist
 	// State variables
+	var key *Key
 	var val string
 	var variant Variant
 	var duration float64
@@ -72,6 +82,8 @@ func ParsePlaylist(url string) (*Playlist, error) {
 			pl.TargetDuration = t
 		} else if line == "#EXT-X-ENDLIST" {
 			pl.EndOfList = true
+		} else if startsWith(line, "#EXT-X-KEY:", &val) {
+			key = parseKey(val)
 		} else if startsWith(line, "#EXTINF:", &val) {
 			duration, title, _ = parseExtInf(val)
 			isSegment = true
@@ -83,6 +95,9 @@ func ParsePlaylist(url string) (*Playlist, error) {
 				Duration: duration,
 				Title:    title,
 				Url:      line,
+			}
+			if key != nil {
+				segment.Key = key
 			}
 			pl.Segments = append(pl.Segments, segment)
 			isSegment = false
@@ -105,6 +120,21 @@ func ParsePlaylist(url string) (*Playlist, error) {
 
 func isComment(line string) bool {
 	return line[0] == '#' && !strings.HasPrefix(line, "#EXT")
+}
+
+func parseKey(val string) *Key {
+	key := new(Key)
+	for k, v := range parseAttributeList(val) {
+		switch k {
+		case "METHOD":
+			key.Method = v
+		case "IV":
+			key.IV = v
+		case "URI":
+			key.Url = v
+		}
+	}
+	return key
 }
 
 func parseVariant(val string) Variant {
@@ -158,31 +188,10 @@ func parseByteRange(value string) (int, int, error) {
 	return length, offset, nil
 }
 
-func scanAttributeList(data []byte, atEOF bool) (int, []byte, error) {
-	insideQuote := false
-	width := 0
-	for i := 0; i < len(data); i += width {
-		var r rune
-		r, width = utf8.DecodeRune(data[i:])
-		if r == '"' {
-			insideQuote = !insideQuote
-		} else if r == ',' && !insideQuote {
-			return i + width, data[0:i], nil
-		}
-	}
-	if atEOF && len(data) > 0 {
-		return len(data), data[0:], nil
-	}
-	return 0, nil, nil
-}
-
 func parseAttributeList(value string) map[string]string {
 	attrs := make(map[string]string)
-	s := bufio.NewScanner(strings.NewReader(value))
-	s.Split(scanAttributeList)
-	for s.Scan() {
-		result := strings.Split(s.Text(), "=")
-		attrs[result[0]] = result[1]
+	for _, result := range re.FindAllStringSubmatch(value, -1) {
+		attrs[result[1]] = result[2]
 	}
 	return attrs
 }
@@ -234,6 +243,9 @@ func main() {
 	}
 	for _, s := range pl.Segments {
 		fmt.Printf("%s %f\n", s.Url, s.Duration)
+		if s.Key != nil {
+			fmt.Printf("%s\n", s.Key.Url)
+		}
 	}
 	for _, v := range pl.Variants {
 		fmt.Printf("%v\n", v)
