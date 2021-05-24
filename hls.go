@@ -74,6 +74,10 @@ func ParsePlaylist(url string) (*Playlist, error) {
 		line := s.Text()
 		if line == "" || isComment(line) {
 			continue
+		} else if startsWith(line, "#EXT-X-VERSION:", &val) {
+			if v, err := strconv.Atoi(val); err == nil {
+				pl.Version = v
+			}
 		} else if startsWith(line, "#EXT-X-STREAM-INF:", &val) {
 			variant = parseVariant(val)
 			isVariant = true
