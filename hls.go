@@ -19,6 +19,7 @@ type Playlist struct {
 	EndOfList      bool
 	Version        int
 	TargetDuration int
+	MediaSequence  int
 	Segments       []Segment
 	Variants       []Variant
 }
@@ -77,6 +78,10 @@ func ParsePlaylist(url string) (*Playlist, error) {
 		} else if startsWith(line, "#EXT-X-VERSION:", &val) {
 			if v, err := strconv.Atoi(val); err == nil {
 				pl.Version = v
+			}
+		} else if startsWith(line, "#EXT-X-MEDIA-SEQUENCE:", &val) {
+			if ms, err := strconv.Atoi(val); err == nil {
+				pl.MediaSequence = ms
 			}
 		} else if startsWith(line, "#EXT-X-STREAM-INF:", &val) {
 			variant = parseVariant(val)
