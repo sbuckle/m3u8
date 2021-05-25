@@ -45,6 +45,9 @@ type Variant struct {
 	Url              string
 	Codecs           string
 	Resolution       string
+	Audio            string
+	Video            string
+	Subtitles        string
 }
 
 var re = regexp.MustCompile(`([-A-Z0-9]+)=("[^"\x0A\x0D]+"|[^",\s]+)`)
@@ -171,6 +174,12 @@ func parseVariant(val string) Variant {
 			}
 		case "RESOLUTION":
 			variant.Resolution = v
+		case "AUDIO":
+			variant.Audio = v
+		case "VIDEO":
+			variant.Video = v
+		case "SUBTITLES":
+			variant.Subtitles = v
 		}
 	}
 	return variant
