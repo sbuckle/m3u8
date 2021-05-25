@@ -22,6 +22,7 @@ type Playlist struct {
 	MediaSequence  int
 	Segments       []Segment
 	Variants       []Variant
+	Media          []Media
 }
 
 type Key struct {
@@ -37,6 +38,16 @@ type Segment struct {
 	Length   int
 	Offset   int
 	Key      *Key // optional
+}
+
+type Media struct {
+	Type     string
+	Url      string
+	GroupID  string
+	Language string
+	Name     string
+	Default  bool
+	Forced   bool
 }
 
 type Variant struct {
@@ -94,6 +105,8 @@ func ParsePlaylist(url string) (*Playlist, error) {
 		} else if startsWith(line, "#EXT-X-STREAM-INF:", &val) {
 			variant = parseVariant(val)
 			isVariant = true
+		} else if startsWith(line, "#EXT-X-MEDIA:", &val) {
+			pl.Media = append(pl.Media, parseMedia(val))
 		} else if startsWith(line, "#EXT-X-TARGETDURATION:", &val) {
 			if t, err := strconv.Atoi(val); err == nil {
 				pl.TargetDuration = t
@@ -155,6 +168,33 @@ func parseKey(val string) *Key {
 		}
 	}
 	return key
+}
+
+func parseMedia(val string) Media {
+	m := Media{}
+	for k, v := range parseAttributeList(val) {
+		switch k {
+		case "GROUP-ID":
+			m.GroupID = v
+		case "TYPE":
+			m.Type = v
+		case "LANGUAGE":
+			m.Language = v
+		case "DEFAULT":
+			if v == "YES" {
+				m.Default = true
+			}
+		case "FORCED":
+			if v == "YES" {
+				m.Forced = true
+			}
+		case "URI":
+			m.Url = v
+		case "NAME":
+			m.Name = v
+		}
+	}
+	return m
 }
 
 func parseVariant(val string) Variant {
@@ -274,5 +314,9 @@ func main() {
 	}
 	for _, v := range pl.Variants {
 		fmt.Printf("%v\n", v)
+	}
+
+	for _, m := range pl.Media {
+		fmt.Printf("%v\n", m)
 	}
 }
