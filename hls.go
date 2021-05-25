@@ -7,7 +7,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"regexp"
 	"strconv"
@@ -119,9 +118,6 @@ func ParsePlaylist(url string) (*Playlist, error) {
 			duration, title, _ = parseExtInf(val)
 			isSegment = true
 		} else if isSegment {
-			if !isAbs(line) {
-				line = makeAbsoluteURL(url, line)
-			}
 			segment := Segment{
 				Duration: duration,
 				Title:    title,
@@ -135,9 +131,6 @@ func ParsePlaylist(url string) (*Playlist, error) {
 			pl.Segments = append(pl.Segments, segment)
 			isSegment = false
 		} else if isVariant {
-			if !isAbs(line) {
-				line = makeAbsoluteURL(url, line)
-			}
 			variant.Url = line
 			pl.Variants = append(pl.Variants, variant)
 			isVariant = false
@@ -259,22 +252,6 @@ func parseAttributeList(value string) map[string]string {
 		attrs[result[1]] = result[2]
 	}
 	return attrs
-}
-
-func isAbs(s string) bool {
-	return strings.HasPrefix(s, "https") || strings.HasPrefix(s, "http")
-}
-
-func makeAbsoluteURL(base, rel string) string {
-	p, err := url.Parse(base)
-	if err != nil {
-		return ""
-	}
-	u, err := p.Parse(rel)
-	if err != nil {
-		return ""
-	}
-	return u.String()
 }
 
 func startsWith(line, prefix string, ptr *string) bool {
