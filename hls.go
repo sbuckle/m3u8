@@ -1,13 +1,11 @@
-package main
+package hls
 
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -303,24 +301,4 @@ func fetch(url string) (string, error) {
 		return "", err
 	}
 	return string(b), nil
-}
-
-func main() {
-	pl, err := ParsePlaylist(os.Args[1])
-	if err != nil {
-		log.Fatal(err)
-	}
-	for _, s := range pl.Segments {
-		fmt.Printf("%s %f %d %d\n", s.Url, s.Duration, s.Length, s.Offset)
-		if s.Key != nil {
-			fmt.Printf("%s\n", s.Key.Url)
-		}
-	}
-	for _, v := range pl.Variants {
-		fmt.Printf("%v\n", v)
-	}
-
-	for _, m := range pl.Media {
-		fmt.Printf("%v\n", m)
-	}
 }

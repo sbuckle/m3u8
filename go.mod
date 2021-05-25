@@ -1,3 +1,3 @@
-module github.com/sbuckle/m3u8
+module github.com/sbuckle/hls
 
 go 1.16
