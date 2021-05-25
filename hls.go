@@ -92,8 +92,9 @@ func ParsePlaylist(url string) (*Playlist, error) {
 			variant = parseVariant(val)
 			isVariant = true
 		} else if startsWith(line, "#EXT-X-TARGETDURATION:", &val) {
-			t, _ := strconv.Atoi(val)
-			pl.TargetDuration = t
+			if t, err := strconv.Atoi(val); err == nil {
+				pl.TargetDuration = t
+			}
 		} else if line == "#EXT-X-ENDLIST" {
 			pl.EndOfList = true
 		} else if startsWith(line, "#EXT-X-KEY:", &val) {
@@ -192,7 +193,6 @@ func parseByteRange(value string) (length int, offset int) {
 		return
 	}
 	res := strings.Split(value, "@")
-	fmt.Printf("%q\n", res)
 	if n, err := strconv.Atoi(res[0]); err == nil {
 		length = n
 	}
