@@ -18,6 +18,7 @@ type Playlist struct {
 	EndOfList      bool
 	Version        int
 	TargetDuration int
+	ListType       string
 	MediaSequence  int
 	Segments       []Segment
 	Variants       []Variant
@@ -103,6 +104,8 @@ func ParsePlaylist(url string) (*Playlist, error) {
 			if v, err := strconv.Atoi(val); err == nil {
 				pl.Version = v
 			}
+		} else if startsWith(line, "#EXT-X-PLAYLIST-TYPE:", &val) {
+			pl.ListType = val
 		} else if startsWith(line, "#EXT-X-MEDIA-SEQUENCE:", &val) {
 			if ms, err := strconv.Atoi(val); err == nil {
 				pl.MediaSequence = ms
@@ -122,7 +125,7 @@ func ParsePlaylist(url string) (*Playlist, error) {
 			pl.EndOfList = true
 		} else if startsWith(line, "#EXT-X-KEY:", &val) {
 			key = parseKey(val)
-		} else if startsWith(line, "#EXT-X-MAP", &val) {
+		} else if startsWith(line, "#EXT-X-MAP:", &val) {
 			xmap = new(Map)
 			for k, v := range parseAttributeList(val) {
 				switch k {
@@ -133,7 +136,10 @@ func ParsePlaylist(url string) (*Playlist, error) {
 				}
 			}
 		} else if startsWith(line, "#EXTINF:", &val) {
-			duration, title, _ = parseExtInf(val)
+			duration, title, err = parseExtInf(val)
+			if err != nil {
+				log.Printf("Error parsing #EXTINF tag value: %v\n", err)
+			}
 			isSegment = true
 		} else if isSegment {
 			segment := Segment{
@@ -160,7 +166,7 @@ func ParsePlaylist(url string) (*Playlist, error) {
 		}
 	}
 	if err := s.Err(); err != nil {
-		log.Fatal(err)
+		log.Printf("Error parsing playlist: %v\n", err)
 	}
 	return &pl, nil
 }
@@ -270,7 +276,7 @@ func parseByteRange(value string) (length int, offset int) {
 func parseAttributeList(value string) map[string]string {
 	attrs := make(map[string]string)
 	for _, result := range re.FindAllStringSubmatch(value, -1) {
-		attrs[result[1]] = result[2]
+		attrs[result[1]] = strings.Trim(result[2], ` "`)
 	}
 	return attrs
 }
