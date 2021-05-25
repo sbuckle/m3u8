@@ -66,6 +66,7 @@ type Variant struct {
 	Audio            string
 	Video            string
 	Subtitles        string
+	FrameRate        float64
 }
 
 var re = regexp.MustCompile(`([-A-Z0-9]+)=("[^"\x0A\x0D]+"|[^",\s]+)`)
@@ -244,6 +245,10 @@ func parseVariant(val string) Variant {
 			variant.Video = v
 		case "SUBTITLES":
 			variant.Subtitles = v
+		case "FRAME-RATE":
+			if f, err := strconv.ParseFloat(v, 64); err == nil {
+				variant.FrameRate = f
+			}
 		}
 	}
 	return variant
