@@ -168,6 +168,7 @@ func ParsePlaylist(url string) (*Playlist, error) {
 	}
 	if err := s.Err(); err != nil {
 		log.Printf("Error parsing playlist: %v\n", err)
+		return nil, err
 	}
 	return &pl, nil
 }
