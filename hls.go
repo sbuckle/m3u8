@@ -149,12 +149,8 @@ func ParsePlaylist(url string) (*Playlist, error) {
 				Url:      line,
 				Length:   length,
 				Offset:   offset,
-			}
-			if key != nil {
-				segment.Key = key
-			}
-			if xmap != nil {
-				segment.Map = xmap
+				Key:      key,
+				Map:      xmap,
 			}
 			pl.Segments = append(pl.Segments, segment)
 			isSegment = false
