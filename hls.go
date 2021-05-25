@@ -3,6 +3,7 @@ package hls
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -299,6 +300,9 @@ func fetch(url string) (string, error) {
 	resp, err := client.Get(url)
 	if err != nil {
 		return "", err
+	}
+	if resp.StatusCode/100 != 2 {
+		return "", fmt.Errorf("Failed to fetch playlist. Got a %d response\n", resp.StatusCode)
 	}
 	defer resp.Body.Close()
 	b, err := io.ReadAll(resp.Body)
