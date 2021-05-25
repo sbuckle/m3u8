@@ -24,6 +24,12 @@ type Playlist struct {
 	Media          []Media
 }
 
+type Map struct {
+	Url    string
+	Length int
+	Offset int
+}
+
 type Key struct {
 	Method string
 	Url    string
@@ -37,6 +43,7 @@ type Segment struct {
 	Length   int
 	Offset   int
 	Key      *Key // optional
+	Map      *Map // optional
 }
 
 type Media struct {
@@ -78,6 +85,7 @@ func ParsePlaylist(url string) (*Playlist, error) {
 	var pl Playlist
 	// State variables
 	var key *Key
+	var xmap *Map
 	var val string
 	var variant Variant
 	var duration float64
@@ -114,6 +122,16 @@ func ParsePlaylist(url string) (*Playlist, error) {
 			pl.EndOfList = true
 		} else if startsWith(line, "#EXT-X-KEY:", &val) {
 			key = parseKey(val)
+		} else if startsWith(line, "#EXT-X-MAP", &val) {
+			xmap = new(Map)
+			for k, v := range parseAttributeList(val) {
+				switch k {
+				case "URI":
+					xmap.Url = v
+				case "BYTERANGE":
+					xmap.Length, xmap.Offset = parseByteRange(v)
+				}
+			}
 		} else if startsWith(line, "#EXTINF:", &val) {
 			duration, title, _ = parseExtInf(val)
 			isSegment = true
@@ -127,6 +145,9 @@ func ParsePlaylist(url string) (*Playlist, error) {
 			}
 			if key != nil {
 				segment.Key = key
+			}
+			if xmap != nil {
+				segment.Map = xmap
 			}
 			pl.Segments = append(pl.Segments, segment)
 			isSegment = false
