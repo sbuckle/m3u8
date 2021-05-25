@@ -46,13 +46,14 @@ type Segment struct {
 }
 
 type Media struct {
-	Type     string
-	Url      string
-	GroupID  string
-	Language string
-	Name     string
-	Default  bool
-	Forced   bool
+	Type       string
+	Url        string
+	GroupID    string
+	Language   string
+	Name       string
+	Default    bool
+	Forced     bool
+	AutoSelect bool
 }
 
 type Variant struct {
@@ -210,6 +211,10 @@ func parseMedia(val string) Media {
 			m.Url = v
 		case "NAME":
 			m.Name = v
+		case "AUTOSELECT":
+			if v == "YES" {
+				m.AutoSelect = true
+			}
 		}
 	}
 	return m
