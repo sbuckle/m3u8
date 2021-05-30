@@ -3,14 +3,11 @@ package hls
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"io"
 	"log"
-	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 )
 
 type Playlist struct {
@@ -71,12 +68,8 @@ type Variant struct {
 
 var re = regexp.MustCompile(`([-A-Z0-9]+)=("[^"\x0A\x0D]+"|[^",\s]+)`)
 
-func ParsePlaylist(url string) (*Playlist, error) {
-	content, err := fetch(url)
-	if err != nil {
-		return nil, err
-	}
-	s := bufio.NewScanner(strings.NewReader(content))
+func Parse(r io.Reader) (*Playlist, error) {
+	s := bufio.NewScanner(r)
 	if !s.Scan() {
 		return nil, s.Err()
 	}
@@ -94,6 +87,7 @@ func ParsePlaylist(url string) (*Playlist, error) {
 	var title string
 	var isSegment, isVariant bool
 	var offset, length int
+	var err error
 
 	linenum := 1
 	for s.Scan() {
@@ -293,23 +287,4 @@ func startsWith(line, prefix string, ptr *string) bool {
 		*ptr = line[len(prefix):]
 	}
 	return b
-}
-
-func fetch(url string) (string, error) {
-	client := &http.Client{
-		Timeout: time.Second * 30,
-	}
-	resp, err := client.Get(url)
-	if err != nil {
-		return "", err
-	}
-	if resp.StatusCode/100 != 2 {
-		return "", fmt.Errorf("Failed to fetch playlist. Got a %d response\n", resp.StatusCode)
-	}
-	defer resp.Body.Close()
-	b, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	return string(b), nil
 }

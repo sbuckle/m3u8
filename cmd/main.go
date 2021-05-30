@@ -3,9 +3,11 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/sbuckle/hls"
 )
@@ -19,7 +21,18 @@ func main() {
 	if err != nil {
 		log.Fatalf("Invalid argument: %v\n", err)
 	}
-	p, err := hls.ParsePlaylist(os.Args[1])
+	client := &http.Client{
+		Timeout: time.Second * 30,
+	}
+	resp, err := client.Get(u.String())
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+	//if resp.StatusCode/100!= 2 {
+	//	log.Fatal(fmt.Errorf("Failed to fetch playlist. Got a %d response\n", resp.StatusCode))
+	//}
+	p, err := hls.Parse(resp.Body)
 	if err != nil {
 		log.Fatal(err)
 	}
