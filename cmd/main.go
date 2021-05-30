@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/sbuckle/hls"
+	"github.com/sbuckle/m3u8"
 )
 
 func main() {
@@ -32,7 +32,7 @@ func main() {
 	//if resp.StatusCode/100!= 2 {
 	//	log.Fatal(fmt.Errorf("Failed to fetch playlist. Got a %d response\n", resp.StatusCode))
 	//}
-	p, err := hls.Parse(resp.Body)
+	p, err := m3u8.Parse(resp.Body)
 	if err != nil {
 		log.Fatal(err)
 	}
