@@ -35,6 +35,10 @@ func TestParseAttributeList(t *testing.T) {
 			`URI="https://priv.example.com/key.php?r=52"`,
 			map[string]string{"URI": `https://priv.example.com/key.php?r=52`},
 		},
+		{
+			"",
+			map[string]string{},
+		},
 	}
 	for _, test := range tests {
 		if got := parseAttributeList(test.input); !reflect.DeepEqual(test.want, got) {
