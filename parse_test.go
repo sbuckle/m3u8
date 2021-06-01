@@ -1,6 +1,7 @@
 package m3u8
 
 import (
+	"os"
 	"reflect"
 	"testing"
 )
@@ -44,5 +45,41 @@ func TestParseAttributeList(t *testing.T) {
 		if got := parseAttributeList(test.input); !reflect.DeepEqual(test.want, got) {
 			t.Errorf("parseAttributeList(%q) = %q", test.input, got)
 		}
+	}
+}
+
+func TestParseMasterPlaylist(t *testing.T) {
+	f, err := os.Open("testdata/master.m3u8")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	p, err := Parse(f)
+	if err != nil {
+		t.Errorf("Failed to parse playlist: %v", err)
+	}
+	if p.Version != 4 {
+		t.Errorf("Playlist version is wrong. Got %d, expected 4", p.Version)
+	}
+	if len(p.Variants) != 4 {
+		t.Errorf("Not all variants in the master playlist parsed. Got %d, expected 4", len(p.Variants))
+	}
+}
+
+func TestParseMediaPlaylist(t *testing.T) {
+	f, err := os.Open("testdata/media.m3u8")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	p, err := Parse(f)
+	if err != nil {
+		t.Errorf("Failed to parse playlist: %v", err)
+	}
+	if p.Version != 3 {
+		t.Errorf("Playlist version is wrong. Got %d, expected 4", p.Version)
+	}
+	if len(p.Segments) != 3 {
+		t.Errorf("Not all segments in the playlist parsed. Got %d, expected 3", len(p.Segments))
 	}
 }
