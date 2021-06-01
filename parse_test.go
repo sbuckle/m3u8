@@ -85,4 +85,14 @@ func TestParseMediaPlaylist(t *testing.T) {
 	if len(p.Segments) != 3 {
 		t.Errorf("Not all segments in the playlist parsed. Got %d, expected 3", len(p.Segments))
 	}
+	expected := []Segment{
+		{Url: "http://media.example.com/first.ts", Duration: 9.009},
+		{Url: "http://media.example.com/second.ts", Duration: 9.009},
+		{Url: "http://media.example.com/third.ts", Duration: 3.003},
+	}
+	for i, segment := range p.Segments {
+		if !reflect.DeepEqual(segment, expected[i]) {
+			t.Errorf("Got: %+v Expected: %+v", segment, expected[i])
+		}
+	}
 }
