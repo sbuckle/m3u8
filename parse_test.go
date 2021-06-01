@@ -79,6 +79,9 @@ func TestParseMediaPlaylist(t *testing.T) {
 	if p.Version != 3 {
 		t.Errorf("Playlist version is wrong. Got %d, expected 4", p.Version)
 	}
+	if p.TargetDuration != 10 {
+		t.Errorf("Target duration. Got %d, expected 10", p.TargetDuration)
+	}
 	if len(p.Segments) != 3 {
 		t.Errorf("Not all segments in the playlist parsed. Got %d, expected 3", len(p.Segments))
 	}
