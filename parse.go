@@ -182,6 +182,8 @@ func parseVariant(val string) Variant {
 			if f, err := strconv.ParseFloat(v, 64); err == nil {
 				variant.FrameRate = f
 			}
+		case "CLOSED-CAPTIONS":
+			variant.ClosedCaptions = v
 		}
 	}
 	return variant

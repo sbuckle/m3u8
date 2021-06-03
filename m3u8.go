@@ -60,5 +60,6 @@ type Variant struct {
 	Audio            string
 	Video            string
 	Subtitles        string
+	ClosedCaptions   string
 	FrameRate        float64
 }
