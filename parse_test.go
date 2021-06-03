@@ -49,6 +49,9 @@ func TestParseMasterPlaylist(t *testing.T) {
 	if err != nil {
 		t.Errorf("Failed to parse playlist: %v", err)
 	}
+	if !p.IsMaster() {
+		t.Error("Not a master playlist but should be")
+	}
 	if p.Version != 4 {
 		t.Errorf("Playlist version is wrong. Got %d, expected 4", p.Version)
 	}

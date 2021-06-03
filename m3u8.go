@@ -11,6 +11,13 @@ type Playlist struct {
 	Media          []Media
 }
 
+func (p Playlist) IsMaster() (b bool) {
+	if len(p.Variants) > 0 {
+		b = true
+	}
+	return
+}
+
 type Map struct {
 	Url    string
 	Length int
