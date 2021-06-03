@@ -33,9 +33,7 @@ func Parse(r io.Reader) (*Playlist, error) {
 	var offset, length int
 	var err error
 
-	linenum := 1
 	for s.Scan() {
-		linenum += 1
 		line := s.Text()
 		if line == "" || isComment(line) {
 			continue
