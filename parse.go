@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"io"
-	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -31,7 +30,6 @@ func Parse(r io.Reader) (*Playlist, error) {
 	var title string
 	var isSegment, isVariant bool
 	var offset, length int
-	var err error
 
 	for s.Scan() {
 		line := s.Text()
@@ -73,10 +71,7 @@ func Parse(r io.Reader) (*Playlist, error) {
 				}
 			}
 		} else if startsWith(line, "#EXTINF:", &val) {
-			duration, title, err = parseExtInf(val)
-			if err != nil {
-				log.Printf("Error parsing #EXTINF tag value: %v\n", err)
-			}
+			duration, title, _ = parseExtInf(val)
 			isSegment = true
 		} else if isSegment {
 			segment := Segment{
@@ -94,12 +89,9 @@ func Parse(r io.Reader) (*Playlist, error) {
 			variant.Url = line
 			pl.Variants = append(pl.Variants, variant)
 			isVariant = false
-		} else {
-			log.Printf("Unknown: %s\n", line)
 		}
 	}
 	if err := s.Err(); err != nil {
-		log.Printf("Error parsing playlist: %v\n", err)
 		return nil, err
 	}
 	return &pl, nil
