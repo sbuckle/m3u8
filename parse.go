@@ -11,12 +11,21 @@ import (
 
 var re = regexp.MustCompile(`([-A-Z0-9]+)=("[^"\x0A\x0D]+"|[^",\s]+)`)
 
-func Parse(r io.Reader) (*Playlist, error) {
+func readLines(r io.Reader) ([]string, error) {
 	s := bufio.NewScanner(r)
-	if !s.Scan() {
-		return nil, s.Err()
+	var lines []string
+	for s.Scan() {
+		lines = append(lines, s.Text())
 	}
-	if s.Text() != "#EXTM3U" {
+	return lines, s.Err()
+}
+
+func Parse(r io.Reader) (*Playlist, error) {
+	lines, err := readLines(r)
+	if err != nil {
+		return nil, err
+	}
+	if lines[0] != "#EXTM3U" {
 		return nil, errors.New("Playlist MUST start with an #EXTM3U tag")
 	}
 
@@ -31,8 +40,7 @@ func Parse(r io.Reader) (*Playlist, error) {
 	var isSegment, isVariant bool
 	var offset, length int
 
-	for s.Scan() {
-		line := s.Text()
+	for _, line := range lines[1:] {
 		if line == "" || isComment(line) {
 			continue
 		} else if startsWith(line, "#EXT-X-VERSION:", &val) {
@@ -90,9 +98,6 @@ func Parse(r io.Reader) (*Playlist, error) {
 			pl.Variants = append(pl.Variants, variant)
 			isVariant = false
 		}
-	}
-	if err := s.Err(); err != nil {
-		return nil, err
 	}
 	return &pl, nil
 }
