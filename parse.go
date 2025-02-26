@@ -36,6 +36,7 @@ func Parse(r io.Reader) (*Playlist, error) {
 	var val string
 	var variant Variant
 	var duration float64
+	var bitrate int64
 	var title string
 	var isSegment, isVariant bool
 	var offset, length int
@@ -64,6 +65,10 @@ func Parse(r io.Reader) (*Playlist, error) {
 			if t, err := strconv.Atoi(val); err == nil {
 				pl.TargetDuration = t
 			}
+		} else if startsWith(line, "#EXT-X-BITRATE:", &val) {
+			if b, err := strconv.ParseInt(val, 10, 64); err == nil {
+				bitrate = b
+			}
 		} else if line == "#EXT-X-ENDLIST" {
 			pl.EndOfList = true
 		} else if startsWith(line, "#EXT-X-KEY:", &val) {
@@ -88,6 +93,7 @@ func Parse(r io.Reader) (*Playlist, error) {
 				Url:      line,
 				Length:   length,
 				Offset:   offset,
+				Bitrate:  bitrate,
 				Key:      key,
 				Map:      xmap,
 			}

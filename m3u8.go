@@ -36,6 +36,7 @@ type Segment struct {
 	Title    string
 	Length   int
 	Offset   int
+	Bitrate  int64
 	Key      *Key // optional
 	Map      *Map // optional
 }
